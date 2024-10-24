@@ -1,0 +1,25 @@
+{
+  "incremental": true,
+  "lineWidth": 100,
+  "indentWidth": 2,
+  "typescript": {
+    "semiColons": "asi",
+    "quoteStyle": "preferSingle",
+    "useBraces": "always",
+    "trailingCommas": "never",
+    "arrowFunction.useParentheses": "preferNone",
+    "jsx.quoteStyle": "preferSingle"
+  },
+  "includes": [
+    "**/*.{ts,js,json}",
+    "*.{ts,js,json}"
+  ],
+  "excludes": [
+    "**/.cache",
+    "**/npm"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.89.3.wasm",
+    "https://plugins.dprint.dev/json-0.19.2.wasm"
+  ]
+}

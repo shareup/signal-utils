@@ -1,0 +1,40 @@
+{
+  "tasks": {
+    "build": "deno run -A build.ts",
+    "esm:add": "deno run -A https://esm.sh/v135 add",
+    "esm:update": "deno run -A https://esm.sh/v135 update",
+    "esm:remove": "deno run -A https://esm.sh/v135 remove"
+  },
+  "compilerOptions": {
+    "useUnknownInCatchVariables": true
+  },
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
+    "@preact/signals-core": "https://esm.sh/v135/@preact/signals-core@1.2.3",
+    "@std/assert": "jsr:@std/assert@^1.0.6"
+  },
+  "fmt": {
+    "exclude": [
+      "./"
+    ]
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ],
+      "exclude": [
+        "no-extra-semi"
+      ],
+      "include": [
+        "no-non-null-assertion"
+      ]
+    }
+  },
+  "scopes": {},
+  "test": {
+    "exclude": [
+      "./npm/"
+    ]
+  }
+}
