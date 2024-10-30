@@ -16,13 +16,13 @@ await build({
     }
   },
   package: {
-    name: '@shareup/array-signal-utils',
+    name: '@shareup/signal-utils',
     version: '0.0.1',
-    description: 'Smart reactive array-like wrappers around preact signals with array values',
+    description: 'Smart reactive wrappers around preact signals with array or object values',
     license: 'MIT',
     repository: {
       type: 'git',
-      url: 'git+https://github.com/shareup/array-signal-utils.git'
+      url: 'git+https://github.com/shareup/signal-utils.git'
     }
   },
   postBuild() {
