@@ -129,7 +129,9 @@
   },
   "remote": {
     "https://esm.sh/v135/@preact/signals-core@1.2.3": "3aaa0b6d3a70b2aba7d94420e0be06a589d197cc896a467cab46cae8101474ae",
-    "https://esm.sh/v135/@preact/signals-core@1.2.3/denonext/signals-core.mjs": "ab86692c6798ae647d1f65b2b60c06263bff325cea087698cd38be5eb8dfb599"
+    "https://esm.sh/v135/@preact/signals-core@1.2.3/denonext/signals-core.mjs": "ab86692c6798ae647d1f65b2b60c06263bff325cea087698cd38be5eb8dfb599",
+    "https://esm.sh/v135/@preact/signals-core@1.8.0": "101cc3c4348ecf6279b3293548aa9a5840a0a5067e3eece116abf9af4fd4ae1c",
+    "https://esm.sh/v135/@preact/signals-core@1.8.0/denonext/signals-core.mjs": "2f03fe54c582037d4ad97103d494480917c62ad4d040280b2589e67245aaca9d"
   },
   "workspace": {
     "dependencies": [

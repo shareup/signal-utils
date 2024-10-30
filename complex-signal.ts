@@ -120,6 +120,9 @@ export function complexSignal<T extends object>(initialValue: T): Signal<T> {
     valueOf() {
       return sig.valueOf().inner
     },
+    toJSON() {
+      return sig.toJSON().inner
+    },
     peek() {
       return sig.peek().inner
     },

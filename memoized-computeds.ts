@@ -59,7 +59,7 @@ export class MemoizedComputeds<T, I, R> {
     if (comp instanceof Signal) {
       return this.#idFn(comp.value)
     } else {
-      return this.#idFn(comp)
+      return this.#idFn(comp as R)
     }
   }
 
