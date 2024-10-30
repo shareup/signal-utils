@@ -1,25 +1,25 @@
-# array-signal-utils
+# signal-utils
 
-For when your signal has an array in it.
+For when your signal has an array or object in it.
 
 ## How to install
 
 ```sh
-npm i @shareup/array-signal-utils
+npm i @shareup/signal-utils
 # or
-deno add @shareup/array-signal-utils
+deno add @shareup/signal-utils
 # or
-bun add @shareup/array-signal-utils
+bun add @shareup/signal-utils
 ```
 
 Or just import it directly in the browser or runtime from esm.sh:
 
 ```js
 import {
-  ArraySignal,
+  complextSignal,
   MemoizedArrayOfSignals,
   MemoizedComputeds
-} from 'https://esm.sh/@shareup/array-signal-utils'
+} from 'https://esm.sh/@shareup/signal-utils'
 ```
 
 ## What problem does this package solve?
@@ -49,10 +49,10 @@ people.value = [{ name: 'Harmony' }, ...people.value] // ✅ reacts
 // 'Names: Alice, Fred, Harmony' is logged
 ```
 
-**This is what `ArraySignal` is for.** `ArraySignal` implements all the array methods and does this for you:
+**This is what `complexSignal` is for.** `complexSignal` proxies all the array methods and does this for you:
 
 ```ts
-const people = new ArraySignal([{ name: 'Alice' }, { name: 'Fred' })
+const people = complexSignal([{ name: 'Alice' }, { name: 'Fred' })
 
 effect(() => {
   console.debug(`Names: ${people.value.map(p => p.name).join(', ')}`))
@@ -64,6 +64,44 @@ people.push({ name: 'Harmony' }) // ✅ reacts
 
 ### Problem 2: deep assignment
 
+Similar to arrays, nested objects aren’t reactive by default:
+
+```ts
+const tree = signal({ name: 'Alice', children: [{name: 'Fred'}, {name: 'August'}] })
+
+effect(() => {
+  console.debug(`Everyone: ${[tree.value.name, ...tree.children.map(p => p.name)].join(', ')}`))
+})
+```
+
+If you rename a child, things don’t react:
+
+```ts
+tree.children[1].name = 'Harmony' // 🚨 won’t react
+```
+
+Instead you have to do fully re-assign signal’s value to make it react:
+
+```ts
+tree.value = { name: 'Alice', children: [{name: 'Fred'}, {name: 'Harmony'}] } // ✅ reacts
+// 'Everyone: Alice, Fred, Harmony' is logged
+```
+
+**This is also what `complexSignal` is for.** `complexSignal` proxies all the object properties and does this for you:
+
+```ts
+const people = complexSignal({ name: 'Alice', children: [{name: 'Fred'}, {name: 'August'}] })
+
+effect(() => {
+  console.debug(`Everyone: ${[tree.value.name, ...tree.children.map(p => p.name)].join(', ')}`))
+})
+
+tree.children[1].name = 'Harmony' // ✅ reacts
+// 'Names: Alice, Fred, Harmony' is logged 💪
+```
+
+### Problem 3: stable array objects as signals
+
 Now that I have a reactive array of “people,” but if I change the name of a person the signal doesn’t react:
 
 ```ts
@@ -71,7 +109,7 @@ const fred = people.value.at(1)!
 fred.name = 'Again' // 🚨 won’t react
 ```
 
-**That is what `MemoizedArrayOfSignals` is for.** It makes each element of the array into a `Signal` and stores all those signals in an `ArraySignal`. Each `Signal` is memoized by an “identifier,” in this case we’ll use the `name` property:
+**That is what `MemoizedArrayOfSignals` is for.** It makes each element of the array into a `Signal`. Each `Signal` is memoized by an “identifier,” in this case we’ll use the `name` property:
 
 ```ts
 const people = new MemoizedArrayOfSignals([{ name: 'Alice' }, { name: 'Fred' }, { name: 'Harmony' }], p => p.name)
@@ -122,7 +160,7 @@ Other uses for `MemoizedArrayOfSignals`:
 * Pass the child `Signal`s down to child UI elements to localize re-rendering / updates to the leaves
 * ...
 
-### Problem 3: computed over memoized array of signals
+### Problem 4: computed over memoized array of signals
 
 Sometimes you want to map over the memoized array of signals, and you want those `ReadonlySignal`s to have the same object identity stability over time.
 

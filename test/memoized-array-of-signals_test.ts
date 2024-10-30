@@ -351,7 +351,7 @@ Deno.test('lastIndexOf()', () => {
 
 Deno.test('toLocaleString()', () => {
   assertSubscribesAndEquals(
-    arr => arr.toLocalString(),
+    arr => arr.toLocaleString(),
     ['a', 'c', 'e', 'g'],
     'a,c,e,g',
     ['a', 'c', 'e'],

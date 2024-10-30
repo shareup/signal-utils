@@ -1,5 +1,5 @@
 import { computed, effect, type ReadonlySignal, Signal, signal } from '@preact/signals-core'
-import { ArraySignal } from './array-signal.ts'
+import { complexSignal } from './complex-signal.ts'
 
 // NOTE: intentionally not implementing methods which produce a copy, that
 // defeats the purpose of having a stable memoized array of signals
@@ -15,7 +15,7 @@ export class MemoizedArrayOfSignals<T, I = T> {
 
   #cache: Map<I, Signal<T>>
   #idFn: (elem: T) => I
-  #storage: ArraySignal<Signal<T>>
+  #storage: Signal<Signal<T>[]>
 
   static fromSignal<T, I>(
     signal: Signal<T[]>,
@@ -46,9 +46,9 @@ export class MemoizedArrayOfSignals<T, I = T> {
         signals.push(sig)
       }
 
-      this.#storage = new ArraySignal(signals)
+      this.#storage = complexSignal(signals)
     } else {
-      this.#storage = new ArraySignal()
+      this.#storage = complexSignal([])
     }
   }
 
@@ -170,24 +170,24 @@ export class MemoizedArrayOfSignals<T, I = T> {
   }
 
   *[Symbol.iterator](): IterableIterator<Signal<T>> {
-    for (const elem of this.#storage) {
+    for (const elem of this.#storage.value) {
       yield elem
     }
   }
 
   at(index: number): Signal<T> | undefined {
-    return this.#storage.at(index)
+    return this.#storage.value.at(index)
   }
 
   clear(): void {
-    this.#storage.clear()
+    this.#storage.value.length = 0
     this.#cache.clear()
   }
 
   // SKIP: concat() - copying method
 
   copyWithin(target: number, start: number, end?: number): MemoizedArrayOfSignals<T, I> {
-    this.#storage.copyWithin(target, start, end)
+    this.#storage.value.copyWithin(target, start, end)
     return this
   }
 
@@ -199,13 +199,13 @@ export class MemoizedArrayOfSignals<T, I = T> {
     cb: (element: Signal<T>, index: number, list: MemoizedArrayOfSignals<T, I>) => boolean,
     thisArg?: unknown
   ): boolean {
-    return this.#storage.every((element, index) => {
+    return this.#storage.value.every((element, index) => {
       return cb(element, index, this)
     }, thisArg)
   }
 
   fill(value: Signal<T> | T, start?: number, end?: number): MemoizedArrayOfSignals<T, I> {
-    this.#storage.fill(this.#cacheItem(value), start, end)
+    this.#storage.value.fill(this.#cacheItem(value), start, end)
     return this
   }
 
@@ -222,7 +222,7 @@ export class MemoizedArrayOfSignals<T, I = T> {
     cb: (elem: Signal<T>, index: number, list: MemoizedArrayOfSignals<T, I>) => unknown,
     thisArg?: unknown
   ): Signal<T> | undefined {
-    return this.#storage.find((element, index) => {
+    return this.#storage.value.find((element, index) => {
       return cb(element, index, this)
     }, thisArg)
   }
@@ -231,7 +231,7 @@ export class MemoizedArrayOfSignals<T, I = T> {
     cb: (elem: Signal<T>, index: number, list: MemoizedArrayOfSignals<T, I>) => unknown,
     thisArg?: unknown
   ): number {
-    return this.#storage.findIndex((element, index) => {
+    return this.#storage.value.findIndex((element, index) => {
       return cb(element, index, this)
     }, thisArg)
   }
@@ -240,7 +240,7 @@ export class MemoizedArrayOfSignals<T, I = T> {
     cb: (elem: Signal<T>, index: number, list: MemoizedArrayOfSignals<T, I>) => unknown,
     thisArg?: unknown
   ): Signal<T> | undefined {
-    return this.#storage.findLast((element, index) => {
+    return this.#storage.value.findLast((element, index) => {
       return cb(element, index, this)
     }, thisArg)
   }
@@ -263,7 +263,7 @@ export class MemoizedArrayOfSignals<T, I = T> {
       array: MemoizedArrayOfSignals<T, I>
     ) => U | ReadonlyArray<U>
   ): U[] {
-    return this.#storage.flatMap((item, index) => {
+    return this.#storage.value.flatMap((item, index) => {
       return cb(item, index, this)
     })
   }
@@ -272,7 +272,7 @@ export class MemoizedArrayOfSignals<T, I = T> {
     cb: (value: Signal<T>, index: number, list: MemoizedArrayOfSignals<T, I>) => void,
     thisArg?: unknown
   ) {
-    return this.#storage.forEach((element, index) => {
+    return this.#storage.value.forEach((element, index) => {
       return cb(element, index, this)
     }, thisArg)
   }
@@ -287,25 +287,29 @@ export class MemoizedArrayOfSignals<T, I = T> {
       return false
     }
 
-    return this.#storage.includes(foundItem, fromIndex)
+    return this.#storage.value.includes(foundItem, fromIndex)
   }
 
-  indexOf(item: Signal<T> | T): number {
+  indexOf(item: Signal<T> | T, fromIndex?: number): number {
     const foundItem = this.#getCachedItem(item)
 
     if (foundItem === notFound) {
       return -1
     }
 
-    return this.#storage.indexOf(foundItem)
+    if (fromIndex === undefined) {
+      return this.#storage.value.indexOf(foundItem)
+    }
+
+    return this.#storage.value.indexOf(foundItem, fromIndex)
   }
 
   join(seperator?: string): string {
-    return this.#storage.join(seperator)
+    return this.#storage.value.join(seperator)
   }
 
   keys(): IterableIterator<number> {
-    return this.#storage.keys()
+    return this.#storage.value.keys()
   }
 
   lastIndexOf(item: Signal<T> | T, fromIndex?: number): number {
@@ -315,18 +319,22 @@ export class MemoizedArrayOfSignals<T, I = T> {
       return -1
     }
 
-    return this.#storage.lastIndexOf(foundItem, fromIndex)
+    if (fromIndex === undefined) {
+      return this.#storage.value.lastIndexOf(foundItem)
+    }
+
+    return this.#storage.value.lastIndexOf(foundItem, fromIndex)
   }
 
   get length(): number {
-    return this.#storage.length
+    return this.#storage.value.length
   }
 
   map<R>(
     cb: (value: Signal<T>, index: number, list: MemoizedArrayOfSignals<T, I>) => R,
     thisArg?: unknown
   ): R[] {
-    return this.#storage.map((element, index) => {
+    return this.#storage.value.map((element, index) => {
       return cb(element, index, this)
     }, thisArg)
   }
@@ -334,11 +342,11 @@ export class MemoizedArrayOfSignals<T, I = T> {
   // SKIP: static of() – use the constructor
 
   pop(): Signal<T> | undefined {
-    return this.#storage.pop()
+    return this.#storage.value.pop()
   }
 
   push(...items: (T | Signal<T>)[]): number {
-    return this.#storage.push(...this.#cacheItems(items))
+    return this.#storage.value.push(...this.#cacheItems(items))
   }
 
   // NOTE: we intentionally only support this typing for reduce() and
@@ -349,7 +357,7 @@ export class MemoizedArrayOfSignals<T, I = T> {
     cb: (acc: U, current: Signal<T>, index: number, array: MemoizedArrayOfSignals<T, I>) => U,
     initialValue: U
   ): U {
-    return this.#storage.reduce((acc: U, item: Signal<T>, index): U => {
+    return this.#storage.value.reduce((acc: U, item: Signal<T>, index): U => {
       return cb(acc, item, index, this)
     }, initialValue)
   }
@@ -358,18 +366,18 @@ export class MemoizedArrayOfSignals<T, I = T> {
     cb: (acc: U, current: Signal<T>, index: number, array: MemoizedArrayOfSignals<T, I>) => U,
     initialValue: U
   ): U {
-    return this.#storage.reduceRight((acc: U, item: Signal<T>, index): U => {
+    return this.#storage.value.reduceRight((acc: U, item: Signal<T>, index): U => {
       return cb(acc, item, index, this)
     }, initialValue)
   }
 
   reverse(): MemoizedArrayOfSignals<T, I> {
-    this.#storage.reverse()
+    this.#storage.value.reverse()
     return this
   }
 
   shift(): Signal<T> | undefined {
-    const item = this.#storage.shift()
+    const item = this.#storage.value.shift()
 
     if (item) {
       this.#cache.delete(this.getID(item))
@@ -384,18 +392,18 @@ export class MemoizedArrayOfSignals<T, I = T> {
     cb: (element: Signal<T>, index: number, list: MemoizedArrayOfSignals<T, I>) => boolean,
     thisArg?: unknown
   ): boolean {
-    return this.#storage.some((element, index) => {
+    return this.#storage.value.some((element, index) => {
       return cb(element, index, this)
     }, thisArg)
   }
 
   sort(compareFn?: (left: Signal<T>, right: Signal<T>) => number): MemoizedArrayOfSignals<T, I> {
-    this.#storage.sort(compareFn)
+    this.#storage.value.sort(compareFn)
     return this
   }
 
   splice(start: number, deleteCount?: number): Signal<T>[] {
-    const items = this.#storage.splice(start, deleteCount)
+    const items = this.#storage.value.splice(start, deleteCount)
 
     for (const item of items) {
       this.#cache.delete(this.getID(item))
@@ -405,23 +413,23 @@ export class MemoizedArrayOfSignals<T, I = T> {
   }
 
   toLocalString(): string {
-    return this.#storage.toLocaleString()
+    return this.#storage.value.toLocaleString()
   }
 
   // SKIP: toReversed() - copying method
   // SKIP: toSorted() - copying method
 
   toString(): string {
-    return this.#storage.toString()
+    return this.#storage.value.toString()
   }
 
   unshift(...items: (Signal<T> | T)[]): number {
     const resolved = items.map(this.#cacheItem.bind(this))
-    return this.#storage.unshift(...resolved)
+    return this.#storage.value.unshift(...resolved)
   }
 
   values(): IterableIterator<Signal<T>> {
-    return this.#storage.values()
+    return this.#storage.value.values()
   }
 
   // SKIP: with() - copying method
