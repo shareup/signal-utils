@@ -156,7 +156,7 @@ This is really useful if you get a JSON response from a server, you can just re-
 
 Other uses for `MemoizedArrayOfSignals`:
 
-* Map 1:1 DOM node to `Signal` to memoized UI elements
+* Map 1:1 DOM node to `Signal` to memoize UI elements
 * Pass the child `Signal`s down to child UI elements to localize re-rendering / updates to the leaves
 * ...
 
