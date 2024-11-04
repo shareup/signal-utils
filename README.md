@@ -24,9 +24,9 @@ import {
 
 ## What problem does this package solve?
 
-### Problem 1: re-assign value
+### Problem 1: deep updates for arrays
 
-When you have an array of objects you wish were reative, you put it in a signal:
+When you have an array of objects you wish were reactive, you put it in a signal:
 
 ```ts
 const people = signal([{ name: 'Alice' }, { name: 'Fred' })
@@ -62,7 +62,7 @@ people.push({ name: 'Harmony' }) // ✅ reacts
 // 'Names: Alice, Fred, Harmony' is logged 💪
 ```
 
-### Problem 2: deep assignment
+### Problem 2: deep updates for objects
 
 Similar to arrays, nested objects aren’t reactive by default:
 
@@ -87,7 +87,7 @@ tree.value = { name: 'Alice', children: [{name: 'Fred'}, {name: 'Harmony'}] } //
 // 'Everyone: Alice, Fred, Harmony' is logged
 ```
 
-**This is also what `complexSignal` is for.** `complexSignal` proxies all the object properties and does this for you:
+**This is *also* what `complexSignal` is for.** `complexSignal` proxies all the object properties and does this for you:
 
 ```ts
 const people = complexSignal({ name: 'Alice', children: [{name: 'Fred'}, {name: 'August'}] })
@@ -102,12 +102,15 @@ tree.children[1].name = 'Harmony' // ✅ reacts
 
 ### Problem 3: stable array objects as signals
 
-Now that I have a reactive array of “people,” but if I change the name of a person the signal doesn’t react:
+If I update one person’s name, I don’t need the entire array signal to react.
 
 ```ts
+const people = complexSignal([{ name: 'Alice' }, { name: 'Fred' })
 const fred = people.value.at(1)!
-fred.name = 'Again' // 🚨 won’t react
+fred.name = 'Again' // 🚨 the entire people signal will update
 ```
+
+It would be better for my UI to have very granular updates.
 
 **That is what `MemoizedArrayOfSignals` is for.** It makes each element of the array into a `Signal`. Each `Signal` is memoized by an “identifier,” in this case we’ll use the `name` property:
 
@@ -118,9 +121,14 @@ effect(() => {
   console.debug(`Names: ${people.value.map(p => p.value.name).join(', ')}`))
 })
 
+effect(() => {
+  console.debug(`Length: ${people.value.length}`)
+})
+
 const fred = people.value.at(1)!
-fred.name = 'Again' // ✅ reacts
+fred.name = 'Again' // ✅ only fred reacts
 // 'Names: Alice, Again, Harmony' is logged 💪
+// 'Length: 3' is not logged 💪
 ```
 
 The top-level signal only reacts when *it changes*:
@@ -152,7 +160,7 @@ people.value[1] === initialSignals[1] // true, Fred is the same exact object!
 people.value[2] !== initialSignals[2] // true, Harmony is gone, Juliet is a new object
 ```
 
-This is really useful if you get a JSON response from a server, you can just re-assign it and it will smart update any signals where the indentifiers match. Then, in your UI, the parts of the UI using data that didn’t change will sit still and the parts that did change will react. 💪
+This is really useful if you get a JSON response from a server, you can just re-assign it and it will smart update any signals where the identifiers match. Then, in your UI, the parts of the UI using data that didn’t change will sit still and the parts that did change will react. 💪
 
 Other uses for `MemoizedArrayOfSignals`:
 
@@ -160,9 +168,9 @@ Other uses for `MemoizedArrayOfSignals`:
 * Pass the child `Signal`s down to child UI elements to localize re-rendering / updates to the leaves
 * ...
 
-### Problem 4: computed over memoized array of signals
+### Problem 4: computing over a memoized array of signals
 
-Sometimes you want to map over the memoized array of signals, and you want those `ReadonlySignal`s to have the same object identity stability over time.
+Sometimes you want to map over the memoized array of signals, and you want those computeds (`ReadonlySignal`s) to have the same object identity stability over time.
 
 **That’s what `MemoizedComputeds` is for.**
 
@@ -173,4 +181,4 @@ const lowercase = new MemoizedComputeds(people, p => { name: p.value.name.toLowe
 lowercase.value.map(p => p.value.name) // ['alice', 'fred', 'harmony']
 ```
 
-And it has the same object stability: a `computed()` is only made once for each `Signal` in the original `MemoizedArrayOfSignals`.
+And it has the same object stability: only one `computed()` is made once for each `Signal` in the original `MemoizedArrayOfSignals`.
