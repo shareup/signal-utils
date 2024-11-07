@@ -1,6 +1,6 @@
 # signal-utils
 
-For when your signal has an array or object in it.
+For when your signal has an array or object in it. We use this in production to build [new.space](https://new.space/).
 
 ## How to install
 
