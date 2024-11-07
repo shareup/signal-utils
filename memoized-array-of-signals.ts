@@ -18,7 +18,7 @@ export class MemoizedArrayOfSignals<T, I = T> {
   #storage: Signal<Signal<T>[]>
 
   static fromSignal<T, I>(
-    signal: Signal<T[]>,
+    signal: ReadonlySignal<T[]>,
     identityFn: (elem: T) => I
   ): [MemoizedArrayOfSignals<T, I>, () => void] {
     const mem = new MemoizedArrayOfSignals<T, I>(signal.value, identityFn)
