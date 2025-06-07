@@ -19,7 +19,9 @@ import {
   complextSignal,
   MemoizedArrayOfSignals,
   MemoizedComputeds
-} from 'https://esm.sh/@shareup/signal-utils'
+} from 'https://esm.sh/*@shareup/signal-utils'
+
+// or import {} from 'https://esm.sh/*gh/shareup/signal-utils/mod.ts'
 ```
 
 ## What problem does this package solve?
