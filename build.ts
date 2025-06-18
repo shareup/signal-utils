@@ -17,7 +17,7 @@ await build({
   },
   package: {
     name: '@shareup/signal-utils',
-    version: '0.0.2',
+    version: '0.0.3',
     description: 'Smart reactive wrappers around preact signals with array or object values',
     license: 'MIT',
     repository: {
